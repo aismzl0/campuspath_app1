@@ -1,5 +1,6 @@
 // 引入基础积木库
 import 'package:flutter/material.dart';
+import 'navigation_page.dart'; // ★引入导航页
 
 // 地点详情页：只负责展示一个地点的信息，内容写死、不交互变化，用 StatelessWidget
 class PoiDetailPage extends StatelessWidget {
@@ -31,9 +32,15 @@ class PoiDetailPage extends StatelessWidget {
             // ★开始导航按钮：先弹提示，导航页下一轮做
             ElevatedButton(
               onPressed: () {
-                ScaffoldMessenger.of(
+                Navigator.push(
                   context,
-                ).showSnackBar(const SnackBar(content: Text("导航功能下一步接入")));
+                  MaterialPageRoute(
+                    builder: (_) => NavigationPage(
+                      startName: "我的位置", // 起点暂时写死，后面接定位后替换
+                      endName: name, // 终点就是当前详情页的地点名
+                    ),
+                  ),
+                );
               },
               child: const Text("开始导航"),
             ),
