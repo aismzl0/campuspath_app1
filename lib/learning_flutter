@@ -34,3 +34,20 @@ Dart 语法上完全等价，`_` 只是一个变量名，只是团队约定：**
 ### 2. Dio 网络库
 
 Flutter 自带的原生 http 功能很简陋，真实开发几乎都用第三方库 **Dio**，它支持统一配置、超时控制、错误拦截、自动解析等，是 Flutter 生态里最主流的网络请求工具
+
+return allPlaces.where((name) => name.contains(keyword)).toList();
+
+1. `allPlaces`：原始列表，类型一般是 `List<String>`，比如 `["广州", "广东", "深圳", "上海"]`
+2. `.where(...)`：筛选方法，遍历每一项，**保留满足条件的元素**Flutter
+
+```
+(name) => name.contains(keyword)
+```
+
+> 例：keyword = "广"，那么 "广州"、"广东" 会返回 true，被保留
+
+- `name`：循环里拿到的每一个地名
+- `name.contains(keyword)`：判断这个字符串**是否包含关键字**（包含就留下）
+
+3. `.where()` 返回的是 **Iterable（可迭代对象，不是 List）**，不能直接用下标 []、不能修改Dart ...
+4. `.toList()`：把 Iterable 转成真正的 `List`，方便后续渲染、增删、取索引Dart

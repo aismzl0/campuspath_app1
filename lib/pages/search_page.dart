@@ -1,6 +1,7 @@
 // 引入基础积木库
 import 'package:flutter/material.dart';
 import 'poi_detail_page.dart';
+import '../services/poi_api.dart'; // 新增：引入POI接口服务
 
 // 搜索页：静态占位页（结果列表下一步才接），继承 StatelessWidget
 class SearchPage extends StatefulWidget {
@@ -18,38 +19,54 @@ class _SearchPageState extends State<SearchPage> {
   // 遥控器：夹在程序和输入框之间，用它读用户打的字。
   // 下划线开头 _controller 表示"内部私有，别的类不用管它"。
   final _controller = TextEditingController();
-  // 本地假数据：几个楼名。等接后端后，这里换成真实搜索结果。
-  final List<String> _mockPlaces = ["思齐楼", "格物楼", "图书馆", "体育馆", "第一教学楼"];
-  // ★新增：当前要显示的结果列表。初始先放全部，进页面就能看到内容。
+  // 搜索结果列表，初始为空
   List<String> _results = [];
+  // 加载状态标记：true=正在请求中，界面显示加载动画
+  bool _isLoasing = false;
 
-  // ★新增：点搜索时执行的筛选逻辑
-  void _onSearch() {
-    // 1. 读出输入框的词，去掉首尾空格
+  // 点击搜索按钮时执行：发请求拿数据，更新界面
+  void _onSearch() async {
+    // 拿到输入框的关键词，去掉首尾空格
     final keyword = _controller.text.trim();
 
-    // 2. 准备一个空列表，用来装匹配到的楼名
-    final List<String> matched = [];
+    // 已经在加载中就直接返回，防止重复点击
+    if (_isLoasing) return;
 
-    // 3. 遍历所有假楼名（用你熟悉的 for）
-    for (final name in _mockPlaces) {
-      // 空词 → 全部保留；有词 → 只留名字里包含这个词的
-      if (keyword.isEmpty || name.contains(keyword)) {
-        matched.add(name); // 符合条件就装进 matched
+    try {
+      // 开始加载：标记为true，触发界面刷新显示加载动画
+      setState(() {
+        _isLoasing = true;
+      });
+
+      // 等待接口返回搜索结果
+      final list = await PoiApi.searchPlaces(keyword);
+
+      // 请求成功：更新结果列表
+      setState(() {
+        _results = list;
+      });
+    } catch (e) {
+      // 请求出错：弹出错误提示
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('搜索失败：$e')));
+      }
+    } finally {
+      // finally 块：无论成功还是失败，一定会执行
+      // 保证加载状态一定会关闭，避免出错后一直转圈
+      if (mounted) {
+        setState(() {
+          _isLoasing = false;
+        });
       }
     }
-    // 4. 用 setState 把结果换掉并触发重绘（前几课的开关）
-    setState(() {
-      _results = matched;
-    });
   }
 
   // ★initState：页面创建时自动调用一次，用来做初始化。固定先调 super.initState()。
   @override
   void initState() {
     super.initState(); // 父类初始化，固定照抄，必须写在第一行
-    // 页面刚进来，把全部假楼名复制一份作为初始结果
-    _results = List.from(_mockPlaces);
   }
 
   // ★ dispose：页面被关闭/销毁时自动调用（生命周期方法）。
@@ -84,7 +101,10 @@ class _SearchPageState extends State<SearchPage> {
 
             // ★新增"搜索"按钮：点了就读取用户输入的字
             ElevatedButton(
-              onPressed: _onSearch, // 直接把方法交给按钮，点了就执行 _onSearch
+              // 加载中时 onPressed 设为 null，按钮自动变灰不可点
+              onPressed: _isLoasing
+                  ? null
+                  : _onSearch, // 直接把方法交给按钮，点了就执行 _onSearch
               child: const Text('搜索'),
             ),
             const SizedBox(height: 8),
@@ -101,8 +121,8 @@ class _SearchPageState extends State<SearchPage> {
             // Expanded：让 ListView 在 Column 里占满剩余高度（不包会报"无高度"错）
             Expanded(
               // ListView：可滚动的一长串条目
+              // 根据加载状态显示不同内容
               child: ListView(
-                // collection-for：遍历假数据，每个楼名生成一行 ListTile（等价于你熟悉的 for 循环）
                 children: [
                   for (final name in _results)
                     ListTile(
@@ -117,11 +137,11 @@ class _SearchPageState extends State<SearchPage> {
                         );
                       },
                     ),
-                  // ★空状态：结果一条都没有时，显示一句提示（不再显示空白）
+                  // 结果为空时显示提示
                   if (_results.isEmpty)
                     const Padding(
                       padding: EdgeInsets.all(24),
-                      child: Center(child: Text("没有找到相关地点，换个词试试")),
+                      child: Center(child: Text('没有找到相关地点，换个词试试')),
                     ),
                 ],
               ),
