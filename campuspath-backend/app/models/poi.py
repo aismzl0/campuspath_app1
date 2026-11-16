@@ -8,13 +8,13 @@ class Poi(db.Model):
     __tablename__ = 'pois'
 
     # 主键id：整数类型，自增主键，每条数据唯一标识
-    id = db.Column(db.Integer,primary_key=True,autoinctrment=True)
+    id = db.Column(db.Integer,primary_key=True,autoincrement=True)
     # 地点名称：字符串类型，最长50字符，不允许为空，建立索引加快搜索
-    name = db.Colum(db.String(50),nullable=False,index=True)
+    name = db.Column(db.String(50),nullable=False,index=True)
     # 地点别名：字符串类型，多个别名用逗号分隔，可选
-    aliases = db.Colum(db.String(200),default='')
+    aliases = db.Column(db.String(200),default='')
     # 纬度：浮点数类型，记录地点的GPS纬度
-    latitude = db.Colum(db.Float, nullable=False)
+    latitude = db.Column(db.Float, nullable=False)
     # 经度：浮点数类型，记录地点的GPS经度
     longitude = db.Column(db.Float, nullable=False)
     # 地点地址：字符串类型，可选

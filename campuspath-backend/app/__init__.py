@@ -31,5 +31,8 @@ def create_app():
     from app.api.system import system_bp
     app.register_blueprint(system_bp,url_prefix='/api/system')
 
+    # ★新增：注册POI地点接口蓝图，接口前缀为/api/poi
+    from app.api.poi import poi_bp
+    app.register_blueprint(poi_bp, url_prefix='/api/poi')
 
     return app

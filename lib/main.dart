@@ -1,14 +1,16 @@
 // 仍然需要 material，因为这里用到 MaterialApp、Scaffold、BottomNavigationBar
 import 'package:flutter/material.dart';
-
 // ★新增：把 pages 文件夹里的首页文件引进来，这样下面才能用 HomePage。
 //   相对路径：main.dart 在 lib/，home_page.dart 在 lib/pages/，所以写 pages/home_page.dart。
 import 'pages/home_page.dart';
 import 'pages/map_page.dart';
 import 'pages/profile_page.dart';
+// ★新增：引入网络客户端，启动时初始化
+import 'core/network/dio_client.dart';
 
 // 程序真正的起点：Flutter 从这里开始执行。固定写法。
 void main() {
+  // Dio客户端会在第一次使用时自动初始化，不用手动调用init
   // runApp：把根组件 MyApp 交给 Flutter 渲染。
   runApp(const MyApp());
 }

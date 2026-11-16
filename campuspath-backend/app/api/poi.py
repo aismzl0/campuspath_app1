@@ -43,3 +43,24 @@ def search_poi():
         'message':'success',
         'data':data
     })
+
+
+
+# ★新增：地点详情接口：GET请求，路径为/detail/<id>
+# <id>是动态参数，前端传地点的id号，就能拿到对应地点的完整信息
+@poi_bp.route('/detail/<int:poi_id>',methods=['GET'])
+def poi_detail(poi_id):
+    # 根据id查询单条地点数据，查不到就返回404错误
+    poi = Poi.query.get_or_404(poi_id)
+
+    # 把单条地点转成字典，放入data返回
+    return jsonify({
+        'code':0,
+        'message':'success',
+        'data':poi.to_dict()
+    })
+
+
+
+
+

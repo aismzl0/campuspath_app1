@@ -51,3 +51,12 @@ return allPlaces.where((name) => name.contains(keyword)).toList();
 
 3. `.where()` 返回的是 **Iterable（可迭代对象，不是 List）**，不能直接用下标 []、不能修改Dart ...
 4. `.toList()`：把 Iterable 转成真正的 `List`，方便后续渲染、增删、取索引Dart
+
+## 问题二：前端报错 `_dio has not been initialized` 的原因和修复
+
+### 原因
+
+我们在 `DioClient` 类里用 `late final Dio _dio;` 声明了 Dio 实例，并且写了 `init()` 方法来初始化它，但**自始至终我们从来没有调用过 `init()` 方法**。
+
+- `late` 的意思是「我稍后会初始化」，但你一直不初始化，直接去用它，就会报这个错
+- 这是典型的「写了初始化逻辑，但忘了在启动时调用」的新手坑
