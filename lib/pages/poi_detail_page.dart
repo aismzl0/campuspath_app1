@@ -1,52 +1,126 @@
-// 引入基础积木库
+// 引入Flutter基础组件库
 import 'package:flutter/material.dart';
-import 'navigation_page.dart'; // ★引入导航页
+// 引入POI接口服务
+import '../services/poi_api.dart';
 
-// 地点详情页：只负责展示一个地点的信息，内容写死、不交互变化，用 StatelessWidget
-class PoiDetailPage extends StatelessWidget {
-  final String name;
-  const PoiDetailPage({super.key, required this.name});
+
+// 地点详情页：需要异步请求数据，有加载状态，所以继承StatefulWidget
+class PoiDetailPage extends StatefulWidget {
+  // 必填参数：地点id，用来请求详情数据
+  final int poiId;
+  // 兼容旧的name参数，方便之前的调用处不用立刻全改
+  final String? name;
+
+  const PoiDetailPage({super.key,required this.poiId,this.name})
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(name)),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              name,
-              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
+  State<PoiDetailPage> createState() => _PoiDetailPageState();
+}
 
-            // 占位信息：接后端后换成真实地址
-            const Text("地址：示例地址（接后端后显示真实位置）"),
-            const SizedBox(height: 8),
-            // 占位简介
-            const Text("简介：这里显示地点介绍、开放时间等信息"),
 
-            const SizedBox(height: 24),
-            // ★开始导航按钮：先弹提示，导航页下一轮做
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => NavigationPage(
-                      startName: "我的位置", // 起点暂时写死，后面接定位后替换
-                      endName: name, // 终点就是当前详情页的地点名
-                    ),
-                  ),
-                );
-              },
-              child: const Text("开始导航"),
-            ),
-          ],
+class _PoiDetailPageState extends State<PoiDetailPage> {
+  // 详情数据，初始为空
+  Map<String,dynamic>?_detail;
+  //加载状态
+  bool _isLoading = true;
+  // 错误信息
+  String? _error;
+
+  // 页面创建时自动调用：发起请求获取详情
+  @override
+  void initState(){
+    super.initState();
+    _loadDetail();
+  }
+
+  // 异步加载详情数据
+  Future<void> _loadDetail() async{
+    try{
+      //调用接口获取数据
+      final data = await PoiApi.getPoiDetail(widget.poiId);
+      //请求成功：更新数据、关闭加载
+      setState(() {
+        _detail = data;
+        _isLoading = false;
+      });
+    } catch(e){
+      // 请求失败：记录错误、关闭加载
+      setState(() {
+        _error = e.toString();
+        _isLoading = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context){
+    return Scaffold(appBar: AppBar(
+      title: Text(_detail?['name']??widget.name??'地点详情'),
+    ),
+    body: Padding(padding: const EdgeInsets.all(16),
+      child: _buildBody(),
+    ),
+    );
+  }
+
+
+  // 根据状态渲染不同的页面内容
+  Widget _buildBody() {
+    // 加载中：显示转圈动画
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    // 加载出错：显示错误提示
+    if (_error != null) {
+      return Center(child: Text('加载失败：$_error'));
+    }
+
+    // 加载成功：显示详情内容
+    final detail = _detail!;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // 地点名称大标题
+        Text(
+          detail['name'],
+          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
         ),
-      ),
+        const SizedBox(height: 16),
+
+        // 地址信息
+        Text("地址：${detail['address'] ?? '暂无'}"),
+        const SizedBox(height: 8),
+
+        // 简介信息
+        Text("简介：${detail['description'] ?? '暂无'}"),
+        const SizedBox(height: 8),
+
+        // 经纬度信息（调试用，真实App可以隐藏）
+        Text("坐标：${detail['latitude']}, ${detail['longitude']}"),
+
+        const SizedBox(height: 24),
+        // 开始导航按钮
+        ElevatedButton(
+          onPressed: () {
+            // 跳转到导航页，传入起点终点名称和坐标
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => NavigationPage(
+                  startName: "我的位置",
+                  endName: detail['name'],
+                ),
+              ),
+            );
+          },
+          child: const Text("开始导航"),
+        ),
+      ],
     );
   }
 }
+
+
+// 临时导入导航页，避免报错
+import 'navigation_page.dart';
