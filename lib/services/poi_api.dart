@@ -5,7 +5,7 @@ import '../core/network/dio_client.dart';
 class PoiApi {
   // 搜索地点接口，接收关键词，返回地点名称列表
   // Future 表示异步返回，需要await接收
-  static Future<List<String>> searchPlaces(String keyword) async {
+  static Future<List<Map<String, dynamic>>> searchPlaces(String keyword) async {
     // 调用Dio客户端的get方法，请求搜索接口
     // queryParameters：把参数拼在url后面
     final response = await DioClient().get(
@@ -17,7 +17,7 @@ class PoiApi {
     List list = response.data['data'];
 
     // 遍历列表，只提取每个地点的name字段，组成字符串列表返回
-    return list.map((item) => item['name'] as String).toList();
+    return list.cast<Map<String, dynamic>>();
   }
 
   // ★新增：根据地点id获取详情信息
